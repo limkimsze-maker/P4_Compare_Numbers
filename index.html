@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<link rel="icon" href="./kimsze_sharp16.ico?v=20260111a" sizes="any">
+<link rel="shortcut icon" href="./kimsze_sharp16.ico?v=20260111a">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>P1 Compare Numbers (1–99999) — Place Value Discs + Inequality + Sentence</title>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+
+      /* column tints */
+      --colTThBg:#efe7ff; /* ten-thousands light purple */
+      --colThBg:#e7f4e7;  /* thousands light green */
+      --colHBg:#fde7f0;   /* hundreds light pink */
+      --colTBg:#ffeede;   /* tens light peach */
+      --colOBg:#e6f1ff;   /* ones light blue */
+
+      /* disc colors */
+      --discTTh:#b197fc;  /* purple */
+      --discTh:#37b24d;   /* green */
+      --discH:#ff7ab6;    /* pink */
+      --discT:#f6a21a;    /* orange */
+      --discO:#4d8dff;    /* blue */
+
+      --input:#e8f6df;
+      --inputLine:#9bbf87;
+
+      --radius:22px;
+      --shadow:0 14px 40px rgba(2,6,23,.10);
+
+      --drawerW:min(420px, 92vw);
+
+      /* stage base size (auto-scaled; no scrolling) */
+      --baseW: 1100;
+      --baseH: 760;
+
+      /* fonts */
+      --S-title: 30px;
+      --S-pvLabel: 18px;
+      --S-pvValue: 20px;
+      --S-row: 24px;
+      --S-instr: 20px;
+
+      /* discs */
+      --discBig: 42px;
+      --discMed: 39px;
+      --discSmall: 34px;
+
+      /* vertical stacks (5 left, 4 right) spacing */
+      --stackColGap: 10px;
+      --stackRowGap: 10px;
+    }
+
+    *{box-sizing:border-box}
+    html, body{
+      height:100%;
+      margin:0;
+      overflow:hidden;
+      overscroll-behavior:none;
+      background:var(--bg);
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
+    }
+
+    body.drawer-open .viewport{
+      padding-right: calc(var(--drawerW) + 10px);
+    }
+
+    .viewport{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 10px;
+    }
+    .stage{
+      width: calc(var(--baseW) * 1px);
+      height: calc(var(--baseH) * 1px);
+      transform-origin: top left;
+      background:#fff;
+      border-radius: 18px;
+      position:relative;
+    }
+
+    .wrap{
+      width:100%;
+      height:100%;
+      padding: 14px 16px 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+    }
+
+    .titleBlock{ display:flex; flex-direction:column; gap:6px; }
+    .titleLine{
+      display:flex;
+      align-items:flex-end;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .titleText{
+      font-size: var(--S-title);
+      font-weight: 900;
+      line-height: 1.02;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .hdrBlank{
+      width: 150px;
+      height: 52px;
+      border-radius: 16px;
+      border: 3px solid var(--inputLine);
+      background: var(--input);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 28px;
+      font-weight: 900;
+      color: rgba(15,23,42,.95);
+      user-select:none;
+    }
+    .instr{
+      font-size: var(--S-instr);
+      color: rgba(15,23,42,.92);
+      font-weight: 800;
+      line-height:1.25;
+    }
+
+    .settingsBtn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--ink);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(2,6,23,.06);
+      white-space:nowrap;
+      height: 44px;
+      align-self:flex-start;
+    }
+    .settingsBtn:active{ transform: translateY(1px); }
+
+    .floatGear{
+      position:absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 5;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow: 0 14px 30px rgba(2,6,23,.14);
+      cursor:pointer;
+      font-size: 22px;
+      font-weight: 900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .floatGear:active{ transform: translateY(1px); }
+
+    .grid{
+      flex: 1;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items:stretch;
+      min-height: 0;
+    }
+
+    .side{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background:#fff;
+      padding: 12px 12px 10px;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    /* 5 columns of place value discs */
+    .blocks{
+      flex: 1;
+      min-height: 0;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      align-items:stretch;
+      padding: 6px 6px 6px;
+    }
+
+    .pvCol{
+      border-radius: 14px;
+      overflow:hidden;
+      border:1px solid rgba(2,6,23,.08);
+      display:flex;
+      flex-direction:column;
+      min-height: 0;
+      background:#fff;
+    }
+    .pvCol.tth{ background: var(--colTThBg); }
+    .pvCol.th { background: var(--colThBg); }
+    .pvCol.h  { background: var(--colHBg); }
+    .pvCol.t  { background: var(--colTBg); }
+    .pvCol.o  { background: var(--colOBg); }
+
+    /* two vertical stacks (5 left, 4 right) */
+    .colInner{
+      flex: 1;
+      min-height: 0;
+      padding: 10px 8px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--stackColGap);
+      align-items:end;
+      justify-items:center;
+      overflow:hidden;
+    }
+    .stackCol{
+      width:100%;
+      display:flex;
+      flex-direction: column-reverse;
+      gap: var(--stackRowGap);
+      align-items:center;
+      justify-content:flex-start;
+      min-height: 0;
+    }
+
+    /* Per-column disc size (max size; JS may auto-fit smaller) */
+    .pvCol.tth .colInner{ --discS: var(--discBig); }
+    .pvCol.th  .colInner{ --discS: var(--discBig); }
+    .pvCol.h   .colInner{ --discS: var(--discBig); }
+    .pvCol.t   .colInner{ --discS: var(--discMed); }
+    .pvCol.o   .colInner{ --discS: var(--discSmall); }
+
+    /* ✅ PV summary card: inputs aligned on a straight line */
+    .pvCard{
+      border-radius: 24px;
+      overflow:hidden;
+      border:2px solid #cbd5e1;
+      background:#fff;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      margin-top: 10px;
+      align-items: stretch;
+    }
+    .pvCell{
+      padding: 8px 6px 10px;
+      border-right: 1px solid rgba(2,6,23,.08);
+      display:grid;
+      grid-template-rows: 36px 1fr 52px; /* label | spacer | value */
+      align-items: start;
+    }
+    .pvCell:last-child{ border-right: 0; }
+
+    .pvCell.tth{ background: linear-gradient(180deg, #d9c7ff 0%, var(--colTThBg) 100%); }
+    .pvCell.th { background: linear-gradient(180deg, #bff0c8 0%, var(--colThBg) 100%); }
+    .pvCell.h  { background: linear-gradient(180deg, #ffc0dc 0%, var(--colHBg) 100%); }
+    .pvCell.t  { background: linear-gradient(180deg, #ffd7a7 0%, var(--colTBg) 100%); }
+    .pvCell.o  { background: linear-gradient(180deg, #bcd6ff 0%, var(--colOBg) 100%); }
+
+    .pvLabel{
+      font-weight: 900;
+      font-size: var(--S-pvLabel);
+      letter-spacing:.2px;
+      text-shadow: 0 2px 0 rgba(255,255,255,.35);
+      text-align:center;
+      align-self: center;
+      justify-self: center;
+      line-height: 1.1;
+    }
+
+    .pvValue{
+      width: 64px;
+      height: 42px;
+      border-radius: 14px;
+      border: 3px solid rgba(2,6,23,.12);
+      background: rgba(255,255,255,.75);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: var(--S-pvValue);
+      font-weight: 900;
+      justify-self: center;
+      align-self: end;
+    }
+    .pvValue.editable{
+      border-color: var(--inputLine);
+      background: var(--input);
+    }
+    .pvInput{
+      width:100%;
+      height:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      text-align:center;
+      font-size: var(--S-pvValue);
+      font-weight: 900;
+    }
+
+    .answers{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px 10px;
+      background:#fff;
+      box-shadow: var(--shadow);
+    }
+
+    .row{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap: 10px;
+      font-size: var(--S-row);
+      font-weight: 900;
+      margin: 6px 0;
+    }
+
+    .blank{
+      width: 170px;
+      height: 54px;
+      border-radius: 16px;
+      border: 3px solid var(--inputLine);
+      background: var(--input);
+      font-size: 28px;
+      font-weight: 900;
+      text-align:center;
+      outline:none;
+    }
+    .blank:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      filter: grayscale(.2);
+    }
+    .blank.good{ border-color:#16a34a; box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+    .blank.bad{ border-color:#ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.14); }
+
+    .pvValue.good{
+      border-color:#16a34a !important;
+      box-shadow: 0 0 0 4px rgba(34,197,94,.15);
+    }
+    .pvValue.bad{
+      border-color:#ef4444 !important;
+      box-shadow: 0 0 0 4px rgba(239,68,68,.14);
+    }
+
+    /* numbers in the compare row (hidden until PV correct) */
+    .numText{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 170px;
+      height: 54px;
+      border-radius: 16px;
+      border: 3px solid rgba(2,6,23,.12);
+      background: #fff;
+      font-size: 28px;
+      font-weight: 1000;
+      padding: 0 12px;
+      user-select:none;
+    }
+    .numText.hidden{
+      border-color: var(--inputLine);
+      background: var(--input);
+      color: rgba(15,23,42,.35);
+      letter-spacing: 1px;
+    }
+
+    /* inequality sign input (like the picture) */
+    .signBox{
+      width: 70px;
+      height: 54px;
+      border-radius: 16px;
+      border: 3px solid var(--inputLine);
+      background: var(--input);
+      font-size: 30px;
+      font-weight: 1000;
+      text-align:center;
+      outline:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+    }
+    .signBox:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      filter: grayscale(.2);
+    }
+
+    .btnRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top: 8px;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 900;
+      cursor:pointer;
+      box-shadow: 0 10px 20px rgba(2,6,23,.08);
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: transparent;
+      background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+      color:#fff;
+    }
+    .btn.toggle-on{
+      border-color:#16a34a;
+      box-shadow: 0 10px 20px rgba(2,6,23,.08), 0 0 0 4px rgba(34,197,94,.12);
+    }
+
+    .btn.inside{
+      height: 54px;
+      padding: 0 16px;
+      border-radius: 16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+    }
+
+    .msg{ font-weight: 800; color: var(--muted); }
+
+    .credit{
+      text-align:right;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Disc takes size from column's --discS */
+    .disc{
+      width: var(--discS);
+      height: var(--discS);
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1000;
+      color: rgba(15,23,42,.95);
+      background: #fff;
+      border: 3px solid rgba(2,6,23,.12);
+      box-shadow: 0 10px 18px rgba(2,6,23,.10);
+      user-select:none;
+      flex: 0 0 auto;
+    }
+    .disc.tth{ background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.10)), var(--discTTh); border-color: rgba(64,0,140,.22); }
+    .disc.th { background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.10)), var(--discTh);  border-color: rgba(7,94,36,.35); }
+    .disc.h  { background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.10)), var(--discH);   border-color: rgba(136,22,74,.28); }
+    .disc.t  { background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.10)), var(--discT);   border-color: rgba(122,73,0,.30); }
+    .disc.o  { background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.10)), var(--discO);   border-color: rgba(0,49,120,.28); }
+
+    .disc span{
+      filter: drop-shadow(0 2px 0 rgba(255,255,255,.35));
+      font-size: clamp(12px, calc(var(--discS) * 0.32), 17px);
+      line-height: 1;
+    }
+
+    /* Teacher drawer */
+    .drawerOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,0);
+      display:none;
+      z-index: 50;
+    }
+    .drawer{
+      position:fixed; top:0; right:0; height:100%;
+      width: var(--drawerW);
+      background:#fff;
+      border-left:1px solid var(--line);
+      box-shadow: -20px 0 60px rgba(2,6,23,.25);
+      transform: translateX(100%);
+      transition: transform .22s ease;
+      z-index: 60;
+      display:flex;
+      flex-direction:column;
+    }
+    .drawerOverlay.show{ display:block; }
+    .drawer.show{ transform: translateX(0); }
+
+    .drawerTop{
+      position:sticky; top:0;
+      background:#fff;
+      border-bottom:1px solid var(--line);
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      z-index:2;
+    }
+    .drawerTop h2{ margin:0; font-size: 16px; letter-spacing:.2px; }
+    .closeBtn{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 900;
+      cursor:pointer;
+    }
+    .drawerBody{ padding: 14px; overflow:auto; }
+
+    .field{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background:#fafafa;
+    }
+    .field label{ display:block; font-weight: 900; margin-bottom: 6px; }
+    .help{ color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 6px; }
+    .numRow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .setNum{
+      width: 170px;
+      height: 46px;
+      border-radius: 12px;
+      border:1px solid #cbd5e1;
+      padding: 0 10px;
+      font-size: 16px;
+      font-weight: 800;
+      outline:none;
+      background:#fff;
+    }
+    .select{
+      width: 100%;
+      height: 44px;
+      border-radius: 12px;
+      border:1px solid #cbd5e1;
+      padding: 0 10px;
+      font-size: 15px;
+      font-weight: 800;
+      outline:none;
+      background:#fff;
+    }
+
+    .toggleRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 0 2px;
+    }
+    .toggleRow span{ font-weight: 900; }
+    .switch{
+      appearance:none;
+      width: 54px;
+      height: 30px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      border:1px solid #cbd5e1;
+      position:relative;
+      cursor:pointer;
+      outline:none;
+    }
+    .switch::after{
+      content:"";
+      width: 24px; height: 24px;
+      border-radius:999px;
+      background:#fff;
+      box-shadow: 0 8px 18px rgba(2,6,23,.18);
+      position:absolute;
+      left: 3px; top: 2px;
+      transition: transform .18s ease;
+    }
+    .switch:checked{ background: #22c55e; border-color:#16a34a; }
+    .switch:checked::after{ transform: translateX(24px); }
+
+    .sliderRow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items:center;
+      margin-top: 8px;
+    }
+    input[type="range"]{ width:100%; }
+    .pill{
+      font-weight:900;
+      font-size:12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid #cbd5e1;
+      background:#fff;
+      white-space:nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="viewport">
+    <div class="stage" id="stage">
+      <div class="wrap">
+        <div class="topbar">
+          <div class="titleBlock">
+            <div class="titleLine">
+              <div class="titleText">(a) Compare</div>
+              <div class="hdrBlank" id="hdrA">???</div>
+              <div class="titleText">and</div>
+              <div class="hdrBlank" id="hdrB">???</div>
+              <div class="titleText">.</div>
+            </div>
+            <div class="instr">Use ‘&gt;’ or ‘&lt;’ to indicate which is greater or smaller.</div>
+          </div>
+
+          <button class="settingsBtn" id="openSettings">⚙️ Teacher Settings</button>
+        </div>
+
+        <div class="grid">
+          <!-- LEFT -->
+          <div class="side">
+            <div class="blocks">
+              <div class="pvCol tth"><div class="colInner" id="leftTenThousands"></div></div>
+              <div class="pvCol th"><div class="colInner" id="leftThousands"></div></div>
+              <div class="pvCol h"><div class="colInner" id="leftHundreds"></div></div>
+              <div class="pvCol t"><div class="colInner" id="leftTens"></div></div>
+              <div class="pvCol o"><div class="colInner" id="leftOnes"></div></div>
+            </div>
+
+            <div class="pvCard">
+              <div class="pvCell tth">
+                <div class="pvLabel">Ten-<br>thousands</div><div></div>
+                <div class="pvValue" id="leftTThVal"></div>
+              </div>
+              <div class="pvCell th">
+                <div class="pvLabel">Thousands</div><div></div>
+                <div class="pvValue" id="leftThVal"></div>
+              </div>
+              <div class="pvCell h">
+                <div class="pvLabel">Hundreds</div><div></div>
+                <div class="pvValue" id="leftHundVal"></div>
+              </div>
+              <div class="pvCell t">
+                <div class="pvLabel">Tens</div><div></div>
+                <div class="pvValue" id="leftTensVal"></div>
+              </div>
+              <div class="pvCell o">
+                <div class="pvLabel">Ones</div><div></div>
+                <div class="pvValue" id="leftOnesVal"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="side">
+            <div class="blocks">
+              <div class="pvCol tth"><div class="colInner" id="rightTenThousands"></div></div>
+              <div class="pvCol th"><div class="colInner" id="rightThousands"></div></div>
+              <div class="pvCol h"><div class="colInner" id="rightHundreds"></div></div>
+              <div class="pvCol t"><div class="colInner" id="rightTens"></div></div>
+              <div class="pvCol o"><div class="colInner" id="rightOnes"></div></div>
+            </div>
+
+            <div class="pvCard">
+              <div class="pvCell tth">
+                <div class="pvLabel">Ten-<br>thousands</div><div></div>
+                <div class="pvValue" id="rightTThVal"></div>
+              </div>
+              <div class="pvCell th">
+                <div class="pvLabel">Thousands</div><div></div>
+                <div class="pvValue" id="rightThVal"></div>
+              </div>
+              <div class="pvCell h">
+                <div class="pvLabel">Hundreds</div><div></div>
+                <div class="pvValue" id="rightHundVal"></div>
+              </div>
+              <div class="pvCell t">
+                <div class="pvLabel">Tens</div><div></div>
+                <div class="pvValue" id="rightTensVal"></div>
+              </div>
+              <div class="pvCell o">
+                <div class="pvLabel">Ones</div><div></div>
+                <div class="pvValue" id="rightOnesVal"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ inequality sign row + sentence row like your picture -->
+        <div class="answers">
+          <!-- Row 1: 90760 [box for > or <] 91750 (numbers hidden until PV correct) -->
+          <div class="row" style="gap:12px">
+            <span class="numText hidden" id="qLeftNum">?????</span>
+
+            <select id="signInp" class="signBox" aria-label="Choose > or <" disabled>
+              <option value="" selected></option>
+              <option value=">">&gt;</option>
+              <option value="<">&lt;</option>
+            </select>
+
+            <span class="numText hidden" id="qRightNum">?????</span>
+
+            <button class="btn primary inside" id="checkBtn" title="Check place values first">Check</button>
+          </div>
+
+          <!-- Row 2: ____ is greater than ____ . (toggle greater/smaller) -->
+          <div class="row">
+            <input class="blank" id="stmtA" inputmode="numeric" maxlength="5" aria-label="First number" disabled>
+            <span id="sentenceMid">is greater than</span>
+            <input class="blank" id="stmtB" inputmode="numeric" maxlength="5" aria-label="Second number" disabled>
+            <span>.</span>
+
+            <button class="btn" id="toggleSentenceBtn" title="Switch sentence to greater/smaller" disabled>
+              Sentence: greater
+            </button>
+          </div>
+
+          <div class="btnRow">
+            <button class="btn" id="quickVarLessBtn" title="Example where 90760 < 91750">Example: &lt;</button>
+            <button class="btn" id="quickVarGreaterBtn" title="Example where 91750 > 90760">Example: &gt;</button>
+            <button class="btn" id="quickRandomBtn" title="New random numbers">Random</button>
+
+            <button class="btn" id="quickHeaderBtn" title="Toggle header reveal">Reveal header</button>
+            <button class="btn" id="quickPVBtn" title="Toggle place-value reveal">Reveal place values</button>
+
+            <button class="btn" id="clearBtn">Clear</button>
+            <span class="msg" id="msg"></span>
+          </div>
+
+          <div class="credit">Designed by Lim Kim Sze © 2026</div>
+        </div>
+
+        <button class="floatGear" id="openSettings2" aria-label="Open teacher settings">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawerOverlay" id="overlay" tabindex="-1" aria-hidden="true"></div>
+  <aside class="drawer" id="drawer" aria-label="Teacher Settings Panel">
+    <div class="drawerTop">
+      <h2>Teacher Settings</h2>
+      <button class="closeBtn" id="closeSettings">Close ✕</button>
+    </div>
+    <div class="drawerBody">
+
+      <div class="field">
+        <label>Question variants</label>
+        <select class="select" id="variantSelect">
+          <option value="less">Variation 1: 90760 &lt; 91750</option>
+          <option value="greater">Variation 2: 91750 &gt; 90760</option>
+        </select>
+        <div class="help">Numbers are hidden until pupils key in place values correctly and press Check.</div>
+      </div>
+
+      <div class="field">
+        <label>Set the two numbers (1–99999)</label>
+        <div class="numRow">
+          <input class="setNum" id="setLeft" type="number" min="1" max="99999" step="1" value="90760">
+          <input class="setNum" id="setRight" type="number" min="1" max="99999" step="1" value="91750">
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn" id="randomBtn">Random</button>
+        </div>
+        <div class="help">If both numbers are the same, the right number will be nudged by 1.</div>
+      </div>
+
+      <div class="field">
+        <div class="toggleRow">
+          <span>Reveal numbers in header</span>
+          <input class="switch" id="revealHeader" type="checkbox">
+        </div>
+        <div class="toggleRow">
+          <span>Reveal place-value digits</span>
+          <input class="switch" id="revealPV" type="checkbox">
+        </div>
+        <div class="help">If place values are revealed, the question numbers will also reveal.</div>
+      </div>
+
+      <div class="field">
+        <label>Disc sizes</label>
+
+        <div class="sliderRow">
+          <input id="discBigRange" type="range" min="34" max="62" step="1" value="42">
+          <span class="pill">Big discs: <span id="discBigVal">42</span>px</span>
+        </div>
+
+        <div class="sliderRow" style="margin-top:10px">
+          <input id="discMedRange" type="range" min="30" max="58" step="1" value="39">
+          <span class="pill">Medium: <span id="discMedVal">39</span>px</span>
+        </div>
+
+        <div class="sliderRow" style="margin-top:10px">
+          <input id="discSmallRange" type="range" min="26" max="52" step="1" value="34">
+          <span class="pill">Small: <span id="discSmallVal">34</span>px</span>
+        </div>
+
+        <div class="help">Columns auto-shrink discs if needed to fit 5+4 neatly.</div>
+      </div>
+
+      <div class="field">
+        <label>Quick reset (teacher)</label>
+        <button class="btn" id="teacherClear">Clear pupil inputs</button>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    const BASE_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseW')) || 1100;
+    const BASE_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--baseH')) || 760;
+    const stage = document.getElementById('stage');
+
+    const overlay = document.getElementById('overlay');
+    const drawer = document.getElementById('drawer');
+
+    function fitStage(){
+      const pad = 20;
+      const vw = Math.max(320, window.innerWidth - pad);
+      const vh = Math.max(320, window.innerHeight - pad);
+
+      const drawerOpen = document.body.classList.contains('drawer-open');
+      const dw = drawerOpen ? drawer.getBoundingClientRect().width : 0;
+      const availW = Math.max(320, vw - dw);
+
+      const s = Math.min(availW / BASE_W, vh / BASE_H);
+      stage.style.transform = `scale(${s})`;
+    }
+    window.addEventListener('resize', fitStage);
+    window.addEventListener('orientationchange', fitStage);
+
+    // numbers (1..99999)
+    let leftNum = 90760;
+    let rightNum = 91750;
+    let revealHeaderNumbers = false;
+    let revealPVNumbers = false;
+
+    // gated reveal for compare row numbers
+    let compareNumbersRevealed = false;
+
+    // header
+    const hdrA = document.getElementById('hdrA');
+    const hdrB = document.getElementById('hdrB');
+
+    // compare row numbers
+    const qLeftNum = document.getElementById('qLeftNum');
+    const qRightNum = document.getElementById('qRightNum');
+
+    // sign input + sentence controls
+    const signInp = document.getElementById('signInp');
+    const stmtA = document.getElementById('stmtA');
+    const stmtB = document.getElementById('stmtB');
+    const sentenceMid = document.getElementById('sentenceMid');
+    const toggleSentenceBtn = document.getElementById('toggleSentenceBtn');
+
+    // discs
+    const leftTThEl = document.getElementById('leftTenThousands');
+    const leftThEl = document.getElementById('leftThousands');
+    const leftHundEl = document.getElementById('leftHundreds');
+    const leftTensEl = document.getElementById('leftTens');
+    const leftOnesEl = document.getElementById('leftOnes');
+
+    const rightTThEl = document.getElementById('rightTenThousands');
+    const rightThEl = document.getElementById('rightThousands');
+    const rightHundEl = document.getElementById('rightHundreds');
+    const rightTensEl = document.getElementById('rightTens');
+    const rightOnesEl = document.getElementById('rightOnes');
+
+    // pv boxes
+    const leftTThVal = document.getElementById('leftTThVal');
+    const leftThVal = document.getElementById('leftThVal');
+    const leftHundVal = document.getElementById('leftHundVal');
+    const leftTensVal = document.getElementById('leftTensVal');
+    const leftOnesVal = document.getElementById('leftOnesVal');
+
+    const rightTThVal = document.getElementById('rightTThVal');
+    const rightThVal = document.getElementById('rightThVal');
+    const rightHundVal = document.getElementById('rightHundVal');
+    const rightTensVal = document.getElementById('rightTensVal');
+    const rightOnesVal = document.getElementById('rightOnesVal');
+
+    const msg = document.getElementById('msg');
+
+    // teacher controls
+    const setLeft = document.getElementById('setLeft');
+    const setRight = document.getElementById('setRight');
+    const applyBtn = document.getElementById('applyBtn');
+    const randomBtn = document.getElementById('randomBtn');
+    const revealHeader = document.getElementById('revealHeader');
+    const revealPV = document.getElementById('revealPV');
+    const teacherClear = document.getElementById('teacherClear');
+    const variantSelect = document.getElementById('variantSelect');
+
+    // size sliders
+    const discBigRange = document.getElementById('discBigRange');
+    const discMedRange = document.getElementById('discMedRange');
+    const discSmallRange = document.getElementById('discSmallRange');
+    const discBigVal = document.getElementById('discBigVal');
+    const discMedVal = document.getElementById('discMedVal');
+    const discSmallVal = document.getElementById('discSmallVal');
+
+    // drawer buttons
+    const openSettings = document.getElementById('openSettings');
+    const openSettings2 = document.getElementById('openSettings2');
+    const closeSettings = document.getElementById('closeSettings');
+
+    // main buttons
+    const checkBtn = document.getElementById('checkBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const quickRandomBtn = document.getElementById('quickRandomBtn');
+    const quickHeaderBtn = document.getElementById('quickHeaderBtn');
+    const quickPVBtn = document.getElementById('quickPVBtn');
+    const quickVarLessBtn = document.getElementById('quickVarLessBtn');
+    const quickVarGreaterBtn = document.getElementById('quickVarGreaterBtn');
+
+    // sentence mode: 'greater' | 'smaller'
+    let sentenceMode = 'greater';
+
+    function clamp1to99999(n){
+      n = Number(n);
+      if (!Number.isFinite(n)) return 1;
+      n = Math.round(n);
+      if (n < 1) n = 1;
+      if (n > 99999) n = 99999;
+      return n;
+    }
+
+    function splitPlaces(n){
+      return {
+        tth: Math.floor(n/10000),
+        th: Math.floor((n%10000)/1000),
+        hund: Math.floor((n%1000)/100),
+        tens: Math.floor((n%100)/10),
+        ones: n % 10
+      };
+    }
+
+    function sanitizeDigits(val, maxLen){
+      const s = String(val ?? '').trim();
+      if (!s) return '';
+      return s.replace(/[^\d]/g,'').slice(0, maxLen);
+    }
+
+    function clearMarks(){
+      [signInp, stmtA, stmtB].forEach(el=> el.classList.remove('good','bad'));
+      [
+        leftTThVal,leftThVal,leftHundVal,leftTensVal,leftOnesVal,
+        rightTThVal,rightThVal,rightHundVal,rightTensVal,rightOnesVal
+      ].forEach(el=> el.classList.remove('good','bad'));
+      msg.textContent = '';
+    }
+
+    function mark(el, ok){
+      el.classList.remove('good','bad');
+      el.classList.add(ok ? 'good' : 'bad');
+    }
+
+    function makeDisc(kind, label){
+      const d = document.createElement('div');
+      d.className = `disc ${kind}`;
+      const sp = document.createElement('span');
+      sp.textContent = label;
+      d.appendChild(sp);
+      return d;
+    }
+
+    function getCssPx(varName, fallback){
+      const v = getComputedStyle(document.documentElement).getPropertyValue(varName);
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function fitDiscSizeForTwoCol(container, countL, countR, maxS){
+      if ((countL <= 0 && countR <= 0) || !container) return maxS;
+
+      const styles = getComputedStyle(container);
+      const padX = (parseFloat(styles.paddingLeft)||0) + (parseFloat(styles.paddingRight)||0);
+      const padY = (parseFloat(styles.paddingTop)||0) + (parseFloat(styles.paddingBottom)||0);
+
+      const gapCol = getCssPx('--stackColGap', 10);
+      const gapRow = getCssPx('--stackRowGap', 10);
+
+      const availW = Math.max(20, container.clientWidth - padX - gapCol);
+      const maxByW = availW / 2;
+
+      const availH = Math.max(40, container.clientHeight - padY);
+      const byH = (c)=>{
+        if (c <= 0) return Infinity;
+        return (availH - (c - 1) * gapRow) / c;
+      };
+      const maxByH = Math.min(byH(countL), byH(countR));
+
+      const fit = Math.floor(Math.min(maxS, maxByW, maxByH));
+      return Math.max(18, fit);
+    }
+
+    function renderDiscs(container, count, kind, labelText){
+      container.innerHTML = '';
+
+      const colL = document.createElement('div');
+      colL.className = 'stackCol';
+      const colR = document.createElement('div');
+      colR.className = 'stackCol';
+      container.appendChild(colL);
+      container.appendChild(colR);
+
+      const leftCount = Math.min(5, count);
+      const rightCount = Math.max(0, count - 5);
+
+      const currentDiscS = getComputedStyle(container).getPropertyValue('--discS');
+      const maxS = Math.max(18, parseFloat(currentDiscS) || 40);
+
+      const fitS = fitDiscSizeForTwoCol(container, leftCount, rightCount, maxS);
+      container.style.setProperty('--discS', fitS + 'px');
+
+      for (let i=0; i<leftCount; i++) colL.appendChild(makeDisc(kind, labelText));
+      for (let i=0; i<rightCount; i++) colR.appendChild(makeDisc(kind, labelText));
+    }
+
+    function renderBlocksFor(n, tthEl, thEl, hEl, tEl, oEl){
+      const { tth, th, hund, tens, ones } = splitPlaces(n);
+      renderDiscs(tthEl, tth, 'tth', '10000');
+      renderDiscs(thEl, th, 'th', '1000');
+      renderDiscs(hEl, hund, 'h', '100');
+      renderDiscs(tEl, tens, 't', '10');
+      renderDiscs(oEl, ones, 'o', '1');
+    }
+
+    function applySizes(){
+      const big = Math.max(34, Math.min(62, Number(discBigRange.value)));
+      const med = Math.max(30, Math.min(58, Number(discMedRange.value)));
+      const small = Math.max(26, Math.min(52, Number(discSmallRange.value)));
+
+      document.documentElement.style.setProperty('--discBig', big + 'px');
+      document.documentElement.style.setProperty('--discMed', med + 'px');
+      document.documentElement.style.setProperty('--discSmall', small + 'px');
+
+      discBigVal.textContent = big;
+      discMedVal.textContent = med;
+      discSmallVal.textContent = small;
+
+      renderBlocksFor(leftNum, leftTThEl, leftThEl, leftHundEl, leftTensEl, leftOnesEl);
+      renderBlocksFor(rightNum, rightTThEl, rightThEl, rightHundEl, rightTensEl, rightOnesEl);
+    }
+
+    function renderHeader(){
+      hdrA.textContent = revealHeaderNumbers ? String(leftNum) : '???';
+      hdrB.textContent = revealHeaderNumbers ? String(rightNum) : '???';
+    }
+
+    function syncSentenceUI(){
+      const txt = (sentenceMode === 'greater') ? 'is greater than' : 'is smaller than';
+      sentenceMid.textContent = txt;
+      toggleSentenceBtn.textContent = `Sentence: ${sentenceMode}`;
+    }
+
+    function setCompareReveal(on){
+      compareNumbersRevealed = !!on;
+
+      signInp.disabled = !compareNumbersRevealed;
+      stmtA.disabled = !compareNumbersRevealed;
+      stmtB.disabled = !compareNumbersRevealed;
+      toggleSentenceBtn.disabled = !compareNumbersRevealed;
+
+      if (compareNumbersRevealed){
+        qLeftNum.textContent = String(leftNum);
+        qRightNum.textContent = String(rightNum);
+        qLeftNum.classList.remove('hidden');
+        qRightNum.classList.remove('hidden');
+        checkBtn.title = 'Check your answers';
+        syncSentenceUI();
+      } else {
+        qLeftNum.textContent = '?????';
+        qRightNum.textContent = '?????';
+        qLeftNum.classList.add('hidden');
+        qRightNum.classList.add('hidden');
+        checkBtn.title = 'Check place values first';
+      }
+    }
+
+    function setPVBox(el, mode, valueOrPlaceholder){
+      el.classList.remove('editable');
+      el.innerHTML = '';
+
+      if (mode === 'reveal'){
+        el.textContent = valueOrPlaceholder;
+        return null;
+      }
+
+      el.classList.add('editable');
+      const inp = document.createElement('input');
+      inp.className = 'pvInput';
+      inp.inputMode = 'numeric';
+      inp.maxLength = 1;
+      inp.placeholder = valueOrPlaceholder || '';
+      inp.addEventListener('input', ()=>{
+        const cleaned = sanitizeDigits(inp.value, 1);
+        if (inp.value !== cleaned) inp.value = cleaned;
+      });
+      el.appendChild(inp);
+      return inp;
+    }
+
+    function renderPV(){
+      const L = splitPlaces(leftNum);
+      const R = splitPlaces(rightNum);
+
+      [
+        leftTThVal,leftThVal,leftHundVal,leftTensVal,leftOnesVal,
+        rightTThVal,rightThVal,rightHundVal,rightTensVal,rightOnesVal
+      ].forEach(el=> el.classList.remove('good','bad'));
+
+      if (revealPVNumbers){
+        setPVBox(leftTThVal,  'reveal', L.tth);
+        setPVBox(leftThVal,   'reveal', L.th);
+        setPVBox(leftHundVal, 'reveal', L.hund);
+        setPVBox(leftTensVal, 'reveal', L.tens);
+        setPVBox(leftOnesVal, 'reveal', L.ones);
+
+        setPVBox(rightTThVal, 'reveal', R.tth);
+        setPVBox(rightThVal,  'reveal', R.th);
+        setPVBox(rightHundVal,'reveal', R.hund);
+        setPVBox(rightTensVal,'reveal', R.tens);
+        setPVBox(rightOnesVal,'reveal', R.ones);
+
+        renderPV._LTTH = renderPV._LTH = renderPV._LH = renderPV._LT = renderPV._LO = null;
+        renderPV._RTTH = renderPV._RTH = renderPV._RH = renderPV._RT = renderPV._RO = null;
+
+        // PV revealed => reveal numbers too
+        setCompareReveal(true);
+      } else {
+        renderPV._LTTH = setPVBox(leftTThVal,  'edit', '');
+        renderPV._LTH  = setPVBox(leftThVal,   'edit', '');
+        renderPV._LH   = setPVBox(leftHundVal, 'edit', '');
+        renderPV._LT   = setPVBox(leftTensVal, 'edit', '');
+        renderPV._LO   = setPVBox(leftOnesVal, 'edit', '');
+
+        renderPV._RTTH = setPVBox(rightTThVal, 'edit', '');
+        renderPV._RTH  = setPVBox(rightThVal,  'edit', '');
+        renderPV._RH   = setPVBox(rightHundVal,'edit', '');
+        renderPV._RT   = setPVBox(rightTensVal,'edit', '');
+        renderPV._RO   = setPVBox(rightOnesVal,'edit', '');
+
+        setCompareReveal(false);
+      }
+    }
+
+    function clearInputsOnly(){
+      signInp.value = '';
+      stmtA.value = '';
+      stmtB.value = '';
+      sentenceMode = 'greater';
+      syncSentenceUI();
+
+      if (!revealPVNumbers){
+        [
+          renderPV._LTTH, renderPV._LTH, renderPV._LH, renderPV._LT, renderPV._LO,
+          renderPV._RTTH, renderPV._RTH, renderPV._RH, renderPV._RT, renderPV._RO
+        ].forEach(inp=>{ if (inp) inp.value = ''; });
+      }
+
+      clearMarks();
+
+      if (!revealPVNumbers) setCompareReveal(false);
+    }
+
+    function syncQuickButtons(){
+      quickHeaderBtn.classList.toggle('toggle-on', revealHeaderNumbers);
+      quickPVBtn.classList.toggle('toggle-on', revealPVNumbers);
+
+      quickHeaderBtn.textContent = revealHeaderNumbers ? 'Header: ON' : 'Header: OFF';
+      quickPVBtn.textContent = revealPVNumbers ? 'Place values: ON' : 'Place values: OFF';
+    }
+
+    function renderAll(){
+      renderHeader();
+      renderBlocksFor(leftNum, leftTThEl, leftThEl, leftHundEl, leftTensEl, leftOnesEl);
+      renderBlocksFor(rightNum, rightTThEl, rightThEl, rightHundEl, rightTensEl, rightOnesEl);
+      renderPV();
+      clearInputsOnly();
+      syncQuickButtons();
+    }
+
+    function checkPVOnly(){
+      const L = splitPlaces(leftNum);
+      const R = splitPlaces(rightNum);
+
+      if (revealPVNumbers) return true;
+
+      const ltth = renderPV._LTTH ? sanitizeDigits(renderPV._LTTH.value, 1) : '';
+      const lth  = renderPV._LTH  ? sanitizeDigits(renderPV._LTH.value, 1)  : '';
+      const lh   = renderPV._LH   ? sanitizeDigits(renderPV._LH.value, 1)   : '';
+      const lt   = renderPV._LT   ? sanitizeDigits(renderPV._LT.value, 1)   : '';
+      const lo   = renderPV._LO   ? sanitizeDigits(renderPV._LO.value, 1)   : '';
+
+      const rtth = renderPV._RTTH ? sanitizeDigits(renderPV._RTTH.value, 1) : '';
+      const rth  = renderPV._RTH  ? sanitizeDigits(renderPV._RTH.value, 1)  : '';
+      const rh   = renderPV._RH   ? sanitizeDigits(renderPV._RH.value, 1)   : '';
+      const rt   = renderPV._RT   ? sanitizeDigits(renderPV._RT.value, 1)   : '';
+      const ro   = renderPV._RO   ? sanitizeDigits(renderPV._RO.value, 1)   : '';
+
+      const okLTTH = ltth !== '' && Number(ltth) === L.tth;
+      const okLTH  = lth  !== '' && Number(lth)  === L.th;
+      const okLH   = lh   !== '' && Number(lh)   === L.hund;
+      const okLT   = lt   !== '' && Number(lt)   === L.tens;
+      const okLO   = lo   !== '' && Number(lo)   === L.ones;
+
+      const okRTTH = rtth !== '' && Number(rtth) === R.tth;
+      const okRTH  = rth  !== '' && Number(rth)  === R.th;
+      const okRH   = rh   !== '' && Number(rh)   === R.hund;
+      const okRT   = rt   !== '' && Number(rt)   === R.tens;
+      const okRO   = ro   !== '' && Number(ro)   === R.ones;
+
+      leftTThVal.classList.add(okLTTH ? 'good' : 'bad');
+      leftThVal.classList.add(okLTH ? 'good' : 'bad');
+      leftHundVal.classList.add(okLH ? 'good' : 'bad');
+      leftTensVal.classList.add(okLT ? 'good' : 'bad');
+      leftOnesVal.classList.add(okLO ? 'good' : 'bad');
+
+      rightTThVal.classList.add(okRTTH ? 'good' : 'bad');
+      rightThVal.classList.add(okRTH ? 'good' : 'bad');
+      rightHundVal.classList.add(okRH ? 'good' : 'bad');
+      rightTensVal.classList.add(okRT ? 'good' : 'bad');
+      rightOnesVal.classList.add(okRO ? 'good' : 'bad');
+
+      return okLTTH && okLTH && okLH && okLT && okLO && okRTTH && okRTH && okRH && okRT && okRO;
+    }
+
+    function expectedSign(){
+      if (leftNum > rightNum) return '>';
+      if (leftNum < rightNum) return '<';
+      return '';
+    }
+
+    function checkAll(){
+      clearMarks();
+
+      // Stage 1: PV must be correct to reveal numbers
+      const pvOk = checkPVOnly();
+
+      if (!compareNumbersRevealed){
+        if (pvOk){
+          setCompareReveal(true);
+          msg.textContent = '✅ Place values correct! Numbers revealed.';
+        } else {
+          msg.textContent = 'Try again. Fill in Ten-thousands, Thousands, Hundreds, Tens and Ones correctly.';
+        }
+        return;
+      }
+
+      // Stage 2A: check sign
+      const expSign = expectedSign();
+      const sOk = (signInp.value === expSign);
+      mark(signInp, sOk);
+
+      // Stage 2B: check sentence blanks based on sentence mode
+      const big = Math.max(leftNum, rightNum);
+      const small = Math.min(leftNum, rightNum);
+
+      const expectedA = (sentenceMode === 'greater') ? big : small;
+      const expectedB = (sentenceMode === 'greater') ? small : big;
+
+      const a = sanitizeDigits(stmtA.value, 5);
+      const b = sanitizeDigits(stmtB.value, 5);
+
+      mark(stmtA, a !== '' && Number(a) === expectedA);
+      mark(stmtB, b !== '' && Number(b) === expectedB);
+
+      const ok = pvOk && sOk && stmtA.classList.contains('good') && stmtB.classList.contains('good');
+
+      msg.textContent = ok
+        ? '✅ Well done!'
+        : (!pvOk)
+          ? 'Try again. Check your place values again.'
+          : (!sOk)
+            ? 'Try again. Choose the correct inequality sign.'
+            : 'Try again. Fill in the sentence correctly (greater/smaller).';
+    }
+
+    function ensureNotEqual(){
+      if (leftNum === rightNum){
+        rightNum = (rightNum === 99999) ? 99998 : rightNum + 1;
+        setRight.value = rightNum;
+      }
+    }
+
+    function applyNumbers(){
+      leftNum = clamp1to99999(setLeft.value);
+      rightNum = clamp1to99999(setRight.value);
+      ensureNotEqual();
+
+      compareNumbersRevealed = false;
+      renderAll();
+      applySizes();
+    }
+
+    function randomizeNumbers(){
+      const a = 1 + Math.floor(Math.random()*99999);
+      let b = 1 + Math.floor(Math.random()*99999);
+      if (b === a) b = (b === 99999) ? 99998 : b + 1;
+
+      setLeft.value = a;
+      setRight.value = b;
+      variantSelect.value = '';
+      applyNumbers();
+    }
+
+    function setRevealHeader(on){
+      revealHeaderNumbers = !!on;
+      revealHeader.checked = revealHeaderNumbers;
+      renderHeader();
+      syncQuickButtons();
+    }
+    function setRevealPV(on){
+      revealPVNumbers = !!on;
+      revealPV.checked = revealPVNumbers;
+
+      renderPV();
+      clearInputsOnly();
+      syncQuickButtons();
+    }
+
+    function setVariant(which){
+      if (which === 'less'){
+        setLeft.value = 90760;
+        setRight.value = 91750;
+        variantSelect.value = 'less';
+        applyNumbers();
+      } else if (which === 'greater'){
+        setLeft.value = 91750;
+        setRight.value = 90760;
+        variantSelect.value = 'greater';
+        applyNumbers();
+      }
+    }
+
+    // listeners
+    variantSelect.addEventListener('change', ()=>{
+      const v = variantSelect.value;
+      if (v === 'less' || v === 'greater') setVariant(v);
+    });
+
+    revealHeader.addEventListener('change', ()=> setRevealHeader(revealHeader.checked));
+    revealPV.addEventListener('change', ()=> setRevealPV(revealPV.checked));
+
+    applyBtn.addEventListener('click', applyNumbers);
+    randomBtn.addEventListener('click', randomizeNumbers);
+    teacherClear.addEventListener('click', clearInputsOnly);
+
+    checkBtn.addEventListener('click', checkAll);
+    clearBtn.addEventListener('click', clearInputsOnly);
+    quickRandomBtn.addEventListener('click', randomizeNumbers);
+    quickHeaderBtn.addEventListener('click', ()=> setRevealHeader(!revealHeaderNumbers));
+    quickPVBtn.addEventListener('click', ()=> setRevealPV(!revealPVNumbers));
+
+    quickVarLessBtn.addEventListener('click', ()=> setVariant('less'));
+    quickVarGreaterBtn.addEventListener('click', ()=> setVariant('greater'));
+
+    discBigRange.addEventListener('input', applySizes);
+    discMedRange.addEventListener('input', applySizes);
+    discSmallRange.addEventListener('input', applySizes);
+
+    toggleSentenceBtn.addEventListener('click', ()=>{
+      sentenceMode = (sentenceMode === 'greater') ? 'smaller' : 'greater';
+      syncSentenceUI();
+      stmtA.value = '';
+      stmtB.value = '';
+      [stmtA, stmtB].forEach(el=> el.classList.remove('good','bad'));
+      msg.textContent = '';
+    });
+
+    [stmtA, stmtB].forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const cleaned = sanitizeDigits(inp.value, 5);
+        if (inp.value !== cleaned) inp.value = cleaned;
+      });
+    });
+
+    function openDrawer(){
+      overlay.classList.add('show');
+      drawer.classList.add('show');
+      overlay.setAttribute('aria-hidden','false');
+      document.body.classList.add('drawer-open');
+      fitStage();
+      applySizes();
+    }
+    function closeDrawer(){
+      overlay.classList.remove('show');
+      drawer.classList.remove('show');
+      overlay.setAttribute('aria-hidden','true');
+      document.body.classList.remove('drawer-open');
+      fitStage();
+      applySizes();
+    }
+    openSettings.addEventListener('click', openDrawer);
+    openSettings2.addEventListener('click', openDrawer);
+    closeSettings.addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+    window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeDrawer(); });
+
+    // Init
+    setLeft.value = leftNum;
+    setRight.value = rightNum;
+    variantSelect.value = 'less';
+    sentenceMode = 'greater';
+    syncSentenceUI();
+
+    fitStage();
+    applySizes();
+    renderAll();
+    requestAnimationFrame(()=> applySizes());
+  </script>
+<script src="https://cdn.counter.dev/script.js" data-id="825e93b6-ce99-40ef-8bcc-125f13297433" data-utcoffset="8"></script>
+</body>
+</html>
